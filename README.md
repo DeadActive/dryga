@@ -1,2 +1,0 @@
-##dryga
-# dryga
