@@ -41,19 +41,6 @@
         <div class="input-box-wrap">
           <input
             type="number"
-            name="focal"
-            id="focal"
-            class="input-box i-focal"
-            v-model="focus"
-            required
-          />
-          <label for="focal" class="input-box-placeholder"
-            >Фокусное расстояние</label
-          >
-        </div>
-        <div class="input-box-wrap">
-          <input
-            type="number"
             name="long"
             id="long"
             class="input-box i-longover"
@@ -91,7 +78,6 @@
           />
           <label for="vel" class="input-box-placeholder">Скорость</label>
         </div>
-        <input type="submit" value="Посчитать" @click.prevent="createRoute()" />
       </form>
     </div>
     <div class="right">
@@ -138,6 +124,7 @@
             ref="route"
             :latLngs="routeLatlngs"
             color="#ff0000"
+            @click="getGeojson($event)"
           ></l-polyline>
         </l-map>
       </div>
@@ -243,18 +230,35 @@ export default {
           let n = i % 2 == 0 ? j : this.shotsCount - j - 1
 
           this.routeLatlngs.push([
-            tl[0] - (dLat * i * 180) / Math.PI,
-            tl[1] + (dLon * n * 180) / Math.PI,
+            tl[0] - (dLat * (i - 0.5) * 180) / Math.PI,
+            tl[1] + (dLon * (n - 1.5) * 180) / Math.PI,
           ])
         }
       }
+    },
+    getGeojson: function(e) {
+      let geojson = JSON.stringify(e.sourceTarget.toGeoJSON())
 
-      console.log(
-        'Avg distance',
-        L.latLng(this.routeLatlngs[30]).distanceTo(
-          L.latLng(this.routeLatlngs[29])
-        )
-      )
+      const el = document.createElement('textarea') // Create a <textarea> element
+      el.value = geojson // Set its value to the string that you want copied
+      el.setAttribute('readonly', '') // Make it readonly to be tamper-proof
+      el.style.position = 'absolute'
+      el.style.left = '-9999px' // Move outside the screen to make it invisible
+      document.body.appendChild(el) // Append the <textarea> element to the HTML document
+      const selected =
+        document.getSelection().rangeCount > 0 // Check if there is any content selected previously
+          ? document.getSelection().getRangeAt(0) // Store selection if found
+          : false // Mark as false to know no selection existed before
+      el.select() // Select the <textarea> content
+      document.execCommand('copy') // Copy - only works as a result of a user action (e.g. click events)
+      document.body.removeChild(el) // Remove the <textarea> element
+      if (selected) {
+        // If a selection existed before copying
+        document.getSelection().removeAllRanges() // Unselect everything on the HTML document
+        document.getSelection().addRange(selected) // Restore the original selection
+      }
+
+      alert('GeoJSON скопирован в буфер обмена')
     },
   },
   computed: {
